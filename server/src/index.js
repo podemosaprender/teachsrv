@@ -1,8 +1,19 @@
 //S: server
+
+/* U: para que estudiantes accedan via pepe.test1.podemosaprender.org
+ * abro tunel con # ssh -i ~/***REMOVED*** -R 13215:localhost:3000 -o ServerAliveInterval=3 ***REMOVED***@podemosaprender.org
+ * 13215 es el puerto de mi app "nginx only port" en opalstack
+ */
+
+
 import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
+import HttpProxy from 'http-proxy';
+
 import * as api from './api.js';
+
+const proxy= HttpProxy.createProxyServer({});
 
 const app = express();
 app.use(cors());
@@ -34,4 +45,20 @@ app.post('/src/:env/*', async (req, res) => {
 	}
 
 });
+
+app.use((req, res, next) => {
+	/* req.headers includes
+	 host: 'st1.test1.podemosaprender.org',
+  'x-forwarded-host': 'st1.test1.podemosaprender.org',
+  'forwarded-request-uri': '/src/pepe/App.jsx',
+	*/
+	const host= req.headers.host;
+	console.log("PROXY", host, req.originalUrl);
+	proxy.web(req, res, { target: 'http://localhost:5173'}) //XXX:get url for student from api
+});
+
 const server = app.listen(3000,'0.0.0.0'); //XXX:sec, all?
+
+server.on('upgrade', (req, socket, head) => {
+	proxy.ws(req, socket, head,{ target: 'http://localhost:5173'}) //XXX:get url for student from api
+});
