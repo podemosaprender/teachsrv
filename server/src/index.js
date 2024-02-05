@@ -1,8 +1,8 @@
 //S: server
 
 /* U: para que estudiantes accedan via pepe.test1.podemosaprender.org
- * abro tunel con # ssh -i ~/***REMOVED*** -R 13215:localhost:3000 -o ServerAliveInterval=3 ***REMOVED***@podemosaprender.org
- * 13215 es el puerto de mi app "nginx only port" en opalstack
+ * abro tunel con # ssh -i *YOUR_KEY* -R 13215:localhost:3000 -o ServerAliveInterval=3 *YOUR_USER*@podemosaprender.org
+ * 13215 es el puerto de mi app "nginx only port" en el hosting
  */
 
 
