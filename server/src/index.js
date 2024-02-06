@@ -5,7 +5,6 @@
  * 13215 es el puerto de mi app "nginx only port" en el hosting
  */
 
-
 import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
@@ -19,32 +18,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get('/src/:env/*', (req,res) => {
-	const spec= api.pathsFromReq(req);
-	const r= {path: spec.file_path} 
-	if (spec.is_dir) {
-		fs.readdir( spec.safe_path, {}, (err, files) => { res.json({ ...r, files}); })
-	} else {
-		fs.readFile( spec.safe_path, "utf8", (err, src) => { res.json({ ...r, src}); })
-	}
+app.get('/src/:env/*', async (req,res) => {
+	res.json(await api.file_read(req))
 })
 
 app.post('/src/:env/*', async (req, res) => {
-	const spec= api.pathsFromReq(req);
-	const r= {path: spec.file_path} 
-	const src= req.body.src;
-
-	if (spec.is_dir) { res.json({ ...r, error: "Only files can be updated"}) }
-	else if (src==null) { res.json({ ...r, error: "Source is null"}) }
-	else { 
-		const view_url= await api.env_ensure_is_running(spec.env_name);
-		fs.writeFile(spec.safe_path, src, 'utf8', (err, ok) => {
-			if (err) { res.json({ ...r, error: `Can't write ${err}`}); }
-			else { res.json({ ...r, ok: 'saved', view_url: view_url }) }
-		});
-	}
-
-});
+	res.json(await api.file_write(req))
+} );
 
 app.use((req, res, next) => {
 	/* req.headers includes
