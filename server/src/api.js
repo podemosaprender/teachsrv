@@ -19,10 +19,7 @@ export function exec_a(cmd) {
 //S: LIB }
 
 //S: FILES { The core is we read and write SOME source code files
-export function pathsFromReq(req) {
-	const env_name_UNSAFE= req.params.env; 
-	const file_path_UNSAFE= req.params[0]; 
-
+export function pathsFromReq({env_name_UNSAFE, file_path_UNSAFE}) {
 	const env_name= env_name_UNSAFE.replace(/[^a-z\d]/gi,''); //XXX:SEC allowed? 
 	const file_path= file_path_UNSAFE
 		.replace(/^[^a-z0-9_]*/gi,'') //A: starts with letter, number or _a (NOT "-" as may be interpreted as parameter)
@@ -31,12 +28,12 @@ export function pathsFromReq(req) {
 	const safe_path= `${CFG_EnvDir}/env_${env_name}/src/${file_path}` //XXX:CFG
 	const is_dir= (file_path=='' || file_path.endsWith('/'))
 	const r= {env_name, file_path, safe_path, is_dir}
-	console.log("PATHS FROM REQ", req.method, r, req.params)
+	console.log("PATHS FROM REQ", r, {env_name_UNSAFE, file_path_UNSAFE})
 	return r;
 }
 
-export async function file_read(req) {
-	const spec= pathsFromReq(req);
+export async function file_read(params) {
+	const spec= pathsFromReq(params);
 	const r= {path: spec.file_path} 
 	//XXX:FILTER by path!
 	try {
@@ -48,9 +45,9 @@ export async function file_read(req) {
 	return r;
 }
 
-export async function file_write(req) {
-	const src= req.body.src;
-	const spec= pathsFromReq(req);
+export async function file_write(params) {
+	const src= params.src
+	const spec= pathsFromReq(params);
 	const r= {path: spec.file_path} 
 
 	if (spec.is_dir) { return { ...r, error: "Only files can be updated"} }
@@ -70,7 +67,8 @@ export async function file_write(req) {
 
 //S: SESSIONS { We create a tmux window and run "some program" to show the results of the edited files
 //XXX:SEC sanitize parameters!
-//XXX:GENERALIZE to any dev environment
+//XXX:GENERALIZE to any dev environment, e.g. cmd_start_dev could launch a docker instance
+//XXX:APP may use many ports, encode in "host name"
 const cmd_start= ({env_name, port}) => `tmux new-window -n e_${env_name} -c /home/usr10/devel/web/pa/x/env_${env_name} -e PORT='${port}'`
 const cmd_start_dev= ({env_name}) => `tmux send -t e_${env_name} 'npm run dev --host 0.0.0.0 --port $PORT' Enter`
 const cmd_capture_dev= ({env_name}) => `tmux capture-pane -t e_${env_name} -p`
@@ -108,5 +106,11 @@ export async function env_ensure_is_running(env_name, wantsForce) {
 
 	return ENV[env_name];
 }
+
+export async function env_app_url({env_name_UNSAFE}) {
+	const spec= pathsFromReq({env_name_UNSAFE, file_path_UNSAFE: ''})
+	return ENV[spec.env_name]?.url
+}
+
 //S: SESSIONS }
 

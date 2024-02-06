@@ -5,7 +5,6 @@
  * 13215 es el puerto de mi app "nginx only port" en el hosting
  */
 
-import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import HttpProxy from 'http-proxy';
@@ -15,30 +14,51 @@ import * as api from './api.js';
 const proxy= HttpProxy.createProxyServer({});
 
 const app = express();
+const server = app.listen(3000,'0.0.0.0'); //XXX:sec, all?
 app.use(cors());
 app.use(express.json());
 
-app.get('/src/:env/*', async (req,res) => {
-	res.json(await api.file_read(req))
-})
-
-app.post('/src/:env/*', async (req, res) => {
-	res.json(await api.file_write(req))
-} );
-
-app.use((req, res, next) => {
+app.use(async (req, res, next) => { //A: proxy other calls to controlled app servers
 	/* req.headers includes
 	 host: 'st1.test1.podemosaprender.org',
   'x-forwarded-host': 'st1.test1.podemosaprender.org',
   'forwarded-request-uri': '/src/pepe/App.jsx',
 	*/
 	const host= req.headers.host;
-	console.log("PROXY", host, req.originalUrl);
-	proxy.web(req, res, { target: 'http://localhost:5173'}) //XXX:get url for student from api
+	if (host.startsWith('env_')) {
+		const env_name_UNSAFE= host.replace(/^env_/,'').split('.')[0];
+		const app_url= await api.env_app_url({env_name_UNSAFE});
+		console.log("PROXY", {app_url, host, req_url: req.originalUrl});
+		if (app_url) {
+			proxy.web(req, res, { target: app_url}) 
+		}
+	} else { next() }
 });
 
-const server = app.listen(3000,'0.0.0.0'); //XXX:sec, all?
-
-server.on('upgrade', (req, socket, head) => {
-	proxy.ws(req, socket, head,{ target: 'http://localhost:5173'}) //XXX:get url for student from api
+server.on('upgrade', async (req, socket, head) => { //A: proxy other calls to controlled app WebSocket servers
+	const host= req.headers.host;
+	if (host.startsWith('env_')) {
+		const env_name_UNSAFE= host.replace(/^env_/,'').split('.')[0];
+		const app_url= await api.env_app_url({env_name_UNSAFE});
+		console.log("PROXY WS", {app_url, host, req_url: req.originalUrl});
+		if (app_url) {
+			proxy.ws(req, socket, head,{ target: app_url}) 
+		}			
+	} else { next() }
 });
+
+app.get('/src/:env/*', async (req,res) => {
+	const env_name_UNSAFE= req.params.env; 
+	const file_path_UNSAFE= req.params[0]; 
+	res.json(await api.file_read({env_name_UNSAFE, file_path_UNSAFE}))
+})
+
+app.post('/src/:env/*', async (req, res) => {
+	const env_name_UNSAFE= req.params.env; 
+	const file_path_UNSAFE= req.params[0]; 
+	const src= req.body.src;
+	res.json(await api.file_write({env_name_UNSAFE, file_path_UNSAFE, src}))
+} );
+
+
+
