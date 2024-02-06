@@ -10,13 +10,20 @@ import 'primeicons/primeicons.css'; //SEE: https://primereact.org/icons/#list
 import 'primereact/resources/themes/lara-dark-purple/theme.css' //SEE: https://primereact.org/calendar/
 //OPT: import "primereact/resources/themes/lara-light-cyan/theme.css";
 import './index.css'
-
+import { Provider } from 'react-redux'
 import { PrimeReactProvider } from 'primereact/api';
+
+import store from './state/store.js';
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
 	<React.StrictMode>
 		<PrimeReactProvider>
-			<App />
+		<Provider store={store}>
+		<App/>
+		</Provider>
+
 		</PrimeReactProvider>
 	</React.StrictMode>,
 )
+

@@ -6,34 +6,35 @@
 
 import React from 'react';
 import { useState } from 'react';
+import MenuTab from './components/tabMenu';
+import {  BrowserRouter, Outlet, Route, RouterProvider, Routes, createBrowserRouter } from 'react-router-dom';
+import ViewCode from './pages/ViewCode';
+import ViewPage from './pages/ViewPage';
+import Home from './pages/Home';
+import Layout from './pages/Layout';
 
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
 
-import CodeMirror from '@uiw/react-codemirror';
-import { javascript } from '@codemirror/lang-javascript';
 
-const host_base=`http://${location.host.replace(/:\d+/,'')}`
-const host_code=`${host_base}:3000`
-const host_vista=`${host_base}:5174` //XXX:conseguir de host_code
-
+export const host_base=`http://${location.host.replace(/:\d+/,'')}`
+export const host_code=`${host_base}:3000`
+export const host_vista=`${host_base}:5173` //XXX:conseguir de host_code
+const router = createBrowserRouter([
+	{ // eslint-disable-next-line no-mixed-spaces-and-tabs
+	  path: "/", element: <Layout/>,
+      children: [
+		{ path: '' ,element: <Home />},
+		{ path: "/view-code", element: <ViewCode/>},
+		{ path: "/view-page", element: <ViewPage/>}
+]
+	},
+  ] ,);
 export function App() {
-	const [vista, setVista]= useState('codigo');
 
 	const [envName, setEnvName]= useState('pepe'); //XXX:HC
   const [archivo, setArchivo] = useState("App.jsx");
-  const [estadoGuardar, setEstadoGuardar] = useState('');
 
-	const [code, setCode] = useState("console.log('hello world!');"); //XXX:HC
 
-	const onGuardar= async () => {
-		setEstadoGuardar('pendiente');
-		await fetch(`${host_code}/src/${envName}/${archivo}`, { 
-			method: "POST", headers: {"Content-type": "application/json"}, 
-			body: JSON.stringify({src: code})
-		});
-		setEstadoGuardar('guardado');
-	}
+
 
 	const onLeer= async () => {
 		const r= await fetch(`${host_code}/src/${envName}/${archivo}`).then(res => res.json());
@@ -41,34 +42,15 @@ export function App() {
 		setEstadoGuardar('guardado');
 	}
 
-  const onChange = React.useCallback((val, viewUpdate) => {
-    console.log('val:', val);
-    setCode(val);
-  }, []);
+	// <Button label="Leer" onClick={onLeer} />
+	// <Button label="Guardar" onClick={onGuardar} />
+	// <Button label="Ver" onClick={() => setVista('resultado')} />
+	// <Button label="Codigo" onClick={() => setVista('codigo')} />
 
-	return (<>
-		<div>
-			<InputText placeholder="Archivo" value={archivo} onChange={(e) => setArchivo(e.target.value)} />
-		 {estadoGuardar}
-			<Button label="Leer" onClick={onLeer} />
-			<Button label="Guardar" onClick={onGuardar} />
-			<Button label="Ver" onClick={() => setVista('resultado')} />
-			<Button label="Codigo" onClick={() => setVista('codigo')} />
-		</div>
-		{ 
-			vista=='codigo'
-		 	? <CodeMirror 
-					value={code}	onChange={onChange} 
-					height="85vh" 
-					extensions={[javascript({ jsx: true })]} 
-					basicSetup={{
-						highlightActiveLineGutter: true,
-						bracketMatching: true,
-						autocompletion: true,
-						tabSize: 2,
-					}}
-				/>
-			: <iframe src={host_vista} style={{ width: '100vw', height: '85vh'}}/>
-		}
-	</>);
+
+	return (
+<RouterProvider router={router} > </RouterProvider>
+
+
+);
 }
