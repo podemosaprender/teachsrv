@@ -15,9 +15,9 @@ const proxy= HttpProxy.createProxyServer({});
 
 const app = express();
 const server = app.listen(3000,'0.0.0.0'); //XXX:sec, all?
-app.use(cors());
-app.use(express.json());
+app.use(cors()); //XXX:SEC:limitar!
 
+//S: PROXY {
 app.use(async (req, res, next) => { //A: proxy other calls to controlled app servers
 	/* req.headers includes
 	 host: 'st1.test1.podemosaprender.org',
@@ -46,7 +46,11 @@ server.on('upgrade', async (req, socket, head) => { //A: proxy other calls to co
 		}			
 	} else { next() }
 });
+//S: PROXY }
 
+//A: request WASN'T handled by calling a proxy
+app.use(express.json());
+//S: FILE SERVER {
 app.get('/src/:env/*', async (req,res) => {
 	const env_name_UNSAFE= req.params.env; 
 	const file_path_UNSAFE= req.params[0]; 
@@ -59,6 +63,23 @@ app.post('/src/:env/*', async (req, res) => {
 	const src= req.body.src;
 	res.json(await api.file_write({env_name_UNSAFE, file_path_UNSAFE, src}))
 } );
+//S: FILE SERVER }
 
+//S: COMMANDS {
+app.get('/cmd/:env/*', async (req,res) => {
+	res.json({ //XXX:to config
+		"file": {
+			"git add": {},
+			"delete": {},
+		},
+		"env": {
+			"git commit": {},
+			"git push": {},
+		}
+	});
+})
 
-
+app.post('/cmd/:env/*', async (req, res) => {
+	res.json({error: 'not implemented'}); //XXX:implement
+});
+//S: COMMANDS }

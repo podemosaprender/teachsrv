@@ -23,7 +23,7 @@ export function pathsFromReq({env_name_UNSAFE, file_path_UNSAFE}) {
 	const env_name= env_name_UNSAFE.replace(/[^a-z\d]/gi,''); //XXX:SEC allowed? 
 	const file_path= file_path_UNSAFE
 		.replace(/^[^a-z0-9_]*/gi,'') //A: starts with letter, number or _a (NOT "-" as may be interpreted as parameter)
-		.replace(/[^-_\.a-z0-9]*/gi,'') //A: only safe characters
+		.replace(/[^-_\/\.a-z0-9]*/gi,'') //A: only safe characters
 
 	const safe_path= `${CFG_EnvDir}/env_${env_name}/src/${file_path}` //XXX:CFG
 	const is_dir= (file_path=='' || file_path.endsWith('/'))
@@ -54,7 +54,6 @@ export async function file_write(params) {
 	else if (src==null) { return { ...r, error: "Source is null"} }
 	//XXX:FILTER by path!
 	//A: can write
-	
 	const view_url= await env_ensure_is_running(spec.env_name);
 	try {
 		await writeFile(spec.safe_path, src, 'utf8');

@@ -5,29 +5,47 @@
 */
 
 import React from 'react';
-import { useState } from 'react';
-import { RouterProvider, createHashRouter } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
 
-import { Layout } from './pages/Layout';
+import { file_read } from './services/codeapi';
+
 import { TabMenu } from './components/tabmenu';
 import ViewCode from './pages/ViewCode';
 import ViewPage from './pages/ViewPage';
 import { Home } from './pages/Home';
 
-const router = createHashRouter([
-	{ // eslint-disable-next-line no-mixed-spaces-and-tabs
-		path: "/", element: <Layout/>,
-		children: [
-			{ path: '' ,element: <Home />},
-			{ path: "/code/*", element: <ViewCode/>},
-			{ path: "/result", element: <ViewPage/>}
-		]
-	},
-] ,);
 
 export function App() {
 	const [envName, setEnvName]= useState('pepe'); //XXX:CFG
+	const [paths, setPaths]= useState(['App.jsx']);
+	const [codeForPath, setCodeForPath]= useState({});
+	const [activeIndex, setActiveIndex]= useState(0);
 
+	const activePath= paths[activeIndex-2];
+	if (activePath!=null) { window.location.hash= activePath };
 
-	return (<RouterProvider router={router} />);
+	const setCodeForActivePath= (src) => {
+			console.log("setCodeForActivePath",activePath,src);
+			setCodeForPath({...codeForPath, [activePath]: src})
+	}
+
+	useEffect( () => {
+		if (activePath && codeForPath[activePath]==null) {
+			file_read(envName,activePath).then(setCodeForActivePath);
+		}
+	}, [activeIndex, paths]);
+
+	const onAddPath= (filePath) => { paths.indexOf(filePath)<0 && setPaths([...paths, filePath]) }
+
+	const tabMenuProps= {activeIndex, setActiveIndex, paths }
+	const homeProps= { onAddPath }
+	const viewCodeProps= {code: codeForPath[activePath]?.src, setCode: (src) => setCodeForActivePath({...codeForPath[activePath], src})};
+	console.log("codeForPath", activePath, codeForPath);
+	return (<>
+		<TabMenu {...tabMenuProps} />
+		{ activeIndex==0 ? <Home {...homeProps} /> :
+			activeIndex==1 ? <ViewPage /> :
+			<ViewCode {...viewCodeProps}/>
+		}
+	</>)
 }
