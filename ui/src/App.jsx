@@ -8,6 +8,8 @@ import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 
 import { Toast } from 'primereact/toast';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Button } from 'primereact/button';
 
 import { file_list, file_read, file_write } from './services/codeapi';
 
@@ -19,6 +21,8 @@ import { Home } from './pages/Home';
 
 export function App() {
 	const toast = useRef(null);
+
+	const [config, setConfig]= useState(); //XXX:CFG
 
 	const [envName, setEnvName]= useState('pepe'); //XXX:CFG
 	const [allPaths, setAllPaths]= useState([]);
@@ -67,14 +71,27 @@ export function App() {
 
 	const tabMenuProps= { items: tabMenuItems }
 	const homeProps= { onAddPath, allPaths, codeForPath, setActiveIndex }
-	const viewCodeProps= {code: codeForPath[activePath]?.src, setCode: (src) => updateCodeForPath({src, edited_ts: new Date()})};
+	const viewCodeProps= {
+		code: codeForPath[activePath]?.src, 
+		setCode: (src) => updateCodeForPath({src, edited_ts: new Date()})
+	};
+	
 	//DBG: console.log("codeForPath", activePath, codeForPath, allPaths);
 	return (<>
 		<Toast ref={toast} />
-		{ activeIndex!= 0 ? <TabMenu {...tabMenuProps} /> : '' }
-		{ activeIndex==0 ? <Home {...homeProps} /> :
-				activeIndex==1 ? <ViewPage /> :
-				<ViewCode {...viewCodeProps}/>
+		{ config 
+			? (<>
+					{ activeIndex!= 0 ? <TabMenu {...tabMenuProps} /> : '' }
+					{ activeIndex==0 ? <Home {...homeProps} /> :
+							activeIndex==1 ? <ViewPage /> :
+							<ViewCode {...viewCodeProps}/>
+					}
+			  </>)
+			: (<>
+				<h1>Paste the token you received</h1>
+				<InputTextarea rows={5} cols={40}/> <br />
+				<Button label="LogIn" onClick={() => setConfig('XXX:read from text area, parse, validate, etc.')} />
+			</>)
 		}
 	</>)
 }

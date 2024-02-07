@@ -17,7 +17,9 @@ export function FileSelector({onAddPath, allPaths, codeForPath, setActiveIndex})
 	const itemTemplate= (option) => {
 		return (<div className="flex flex-row align-items-center">
 			<div className="flex-1">{option.path}</div>
-			<div className="flex-0"><Button 
+			<div className="flex-0">
+				{option.isBeingEdited ? <Button label="XXX git add" /> : ''}
+				<Button 
 				aria-label={option.isBeingEdited ? 'E' : 'P'} 
 				icon={option.isBeingEdited ? 'pi pi-file-edit' : 'pi pi-download'} 
 				onClick={() => {
@@ -31,6 +33,12 @@ export function FileSelector({onAddPath, allPaths, codeForPath, setActiveIndex})
 	return (<>
 		<div className="card flex flex-column">
 			<div className="flex-0 text-right mb-1">
+				<div>
+					<Button label="XXX open result in another tab" />
+					<Button label="XXX git commit" />
+					<Button label="XXX upload all" />
+					<Button label="XXX new file" />
+				</div>
 				<SelectButton value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={["Editing","All"]} />
 			</div>
 			<div className="flex-1">

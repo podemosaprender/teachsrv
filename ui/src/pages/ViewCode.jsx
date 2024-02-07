@@ -4,14 +4,6 @@ import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 
 export default function ViewCode({code, setCode}) {
-	const [estadoGuardar, setEstadoGuardar] = useState('');
-
-	const onGuardar= async () => {
-		setEstadoGuardar('pendiente');
-		//XXX:file_write with params, from Redux?
-		setEstadoGuardar('guardado');
-	}
-
 	const onChange = useCallback((val, viewUpdate) => {
 		setCode(val);
 	}, [setCode]);
