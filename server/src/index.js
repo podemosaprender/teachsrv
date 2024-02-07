@@ -54,7 +54,11 @@ app.use(express.json());
 app.get('/src/:env/*', async (req,res) => {
 	const env_name_UNSAFE= req.params.env; 
 	const file_path_UNSAFE= req.params[0]; 
-	res.json(await api.file_read({env_name_UNSAFE, file_path_UNSAFE}))
+	if (file_path_UNSAFE=='*') {
+		res.json(await api.file_list({env_name_UNSAFE, file_path_UNSAFE}))
+	} else {
+		res.json(await api.file_read({env_name_UNSAFE, file_path_UNSAFE}))
+	}
 })
 
 app.post('/src/:env/*', async (req, res) => {

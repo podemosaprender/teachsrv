@@ -1,6 +1,7 @@
 import { CFG_EnvDir } from './cfg.js';
 import { exec } from 'node:child_process';
 import { writeFile, readFile } from 'node:fs/promises';
+import glob from 'fast-glob';
 
 //S: LIB {
 export function delay(time) {
@@ -30,6 +31,14 @@ export function pathsFromReq({env_name_UNSAFE, file_path_UNSAFE}) {
 	const r= {env_name, file_path, safe_path, is_dir}
 	console.log("PATHS FROM REQ", r, {env_name_UNSAFE, file_path_UNSAFE})
 	return r;
+}
+
+export async function file_list(params) {
+	const spec= pathsFromReq(params);
+	return await glob(
+		`**/*.{js,jsx,css,ts,tsx,php,py,html}`,
+		{cwd: spec.safe_path}
+	)
 }
 
 export async function file_read(params) {

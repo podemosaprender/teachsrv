@@ -7,7 +7,7 @@
 import React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 
-import { file_read } from './services/codeapi';
+import { file_read, file_list } from './services/codeapi';
 
 import { TabMenu } from './components/tabmenu';
 import ViewCode from './pages/ViewCode';
@@ -17,6 +17,7 @@ import { Home } from './pages/Home';
 
 export function App() {
 	const [envName, setEnvName]= useState('pepe'); //XXX:CFG
+	const [allPaths, setAllPaths]= useState([]);
 	const [paths, setPaths]= useState(['App.jsx']);
 	const [codeForPath, setCodeForPath]= useState({});
 	const [activeIndex, setActiveIndex]= useState(0);
@@ -32,15 +33,17 @@ export function App() {
 	useEffect( () => {
 		if (activePath && codeForPath[activePath]==null) {
 			file_read(envName,activePath).then(setCodeForActivePath);
+		} else if (activeIndex==0) {
+			file_list(envName).then(r => setAllPaths(r))
 		}
-	}, [activeIndex, paths]);
+	}, [activeIndex, paths, setAllPaths]);
 
 	const onAddPath= (filePath) => { paths.indexOf(filePath)<0 && setPaths([...paths, filePath]) }
 
 	const tabMenuProps= {activeIndex, setActiveIndex, paths }
-	const homeProps= { onAddPath }
+	const homeProps= { onAddPath, allPaths }
 	const viewCodeProps= {code: codeForPath[activePath]?.src, setCode: (src) => setCodeForActivePath({...codeForPath[activePath], src})};
-	console.log("codeForPath", activePath, codeForPath);
+	//DBG: console.log("codeForPath", activePath, codeForPath, allPaths);
 	return (<>
 		<TabMenu {...tabMenuProps} />
 		{ activeIndex==0 ? <Home {...homeProps} /> :

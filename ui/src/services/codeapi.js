@@ -3,6 +3,10 @@ export const host_base=`http://${location.host.replace(/:\d+/,'')}` //XXX:CFG
 export const host_code=`${host_base}:3000` //XXX:CFG
 export const host_vista=`${host_base}:5173` //XXX:conseguir de host_code
 
+export const file_list= async (envName) => {
+	return await fetch(`${host_code}/src/${envName}/*`).then(r => r.json())
+}
+
 export const file_read= async (envName,filePath) => {
 	return await fetch(`${host_code}/src/${envName}/${filePath}`).then(res => res.json());
 }
