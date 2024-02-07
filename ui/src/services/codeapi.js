@@ -14,7 +14,7 @@ export const file_read= async (envName,filePath) => {
 export const file_write= async (envName,filePath,src) => {
 	await fetch(`${host_code}/src/${envName}/${filePath}`, { 
 		method: "POST", headers: {"Content-type": "application/json"}, 
-		body: JSON.stringify({src: code})
+		body: JSON.stringify({src})
 	});
 }
 

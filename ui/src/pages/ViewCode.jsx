@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
-import { Button } from 'primereact/button';
 
 export default function ViewCode({code, setCode}) {
 	const [estadoGuardar, setEstadoGuardar] = useState('');
@@ -21,8 +20,9 @@ export default function ViewCode({code, setCode}) {
 			<CodeMirror
 				value={code}	
 				onChange={onChange} 
-				height="85vh" 
+				height="95vh" 
 				extensions={[javascript({ jsx: true })]} 
+				theme="dark"
 				basicSetup={{
 					highlightActiveLineGutter: true,
 					bracketMatching: true,
@@ -30,9 +30,6 @@ export default function ViewCode({code, setCode}) {
 					tabSize: 2,
 				}}
 			/>
-
-			<Button label='save' icon='pi pi-save' style={{    position: 'fixed',bottom: '20px',right: '20px',}}/> 
-
 		</>)
 }
 

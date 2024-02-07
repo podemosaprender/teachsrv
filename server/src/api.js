@@ -61,9 +61,11 @@ export async function file_write(params) {
 
 	if (spec.is_dir) { return { ...r, error: "Only files can be updated"} }
 	else if (src==null) { return { ...r, error: "Source is null"} }
+
+	const view_url= await env_ensure_is_running(spec.env_name);
+	
 	//XXX:FILTER by path!
 	//A: can write
-	const view_url= await env_ensure_is_running(spec.env_name);
 	try {
 		await writeFile(spec.safe_path, src, 'utf8');
 		return { ...r, ok: 'saved', view_url: view_url }
@@ -85,7 +87,10 @@ const cmd_query= () => `tmux list-windows -F "#{window_name} : #{window_index}"`
 
 export async function env_is_runningP(env) {
 	const { stdout } = await exec_a(cmd_query(env))
-	return (stdout.indexOf(`e_${env.env_name} :`)>-1) //XXX: coordinar formato arriba!
+	const q= `e_${env.env_name} :`
+	const idx= (stdout+'').indexOf(q)
+	//DBG: console.log("env_is_runningP",{idx,q,stdout})
+	return (idx>-1) //XXX: coordinar formato arriba!
 }
 
 const ENV={};
@@ -95,9 +100,11 @@ function env_port_for(env_name) {
 }
 
 export async function env_ensure_is_running(env_name, wantsForce) {
+	//DBG: console.log("env_ensure_is_running", {env_name, wantsForce});
+
 	//XXX:restart this server or dev
 	const env= ENV[env_name] || {env_name, port: env_port_for(env_name)}
-	if (wantsForce || !await env_is_runningP(env_name)) {
+	if (wantsForce || !await env_is_runningP(env)) {
 		ENV[env_name]=null;
 		await exec_a(cmd_start(env));
 		await exec_a(cmd_start_dev(env));
