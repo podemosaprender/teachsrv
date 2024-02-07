@@ -1,8 +1,9 @@
 
 import React from 'react'; 
-import { host_vista } from '../App';
+import { host_base } from '../App';
 
 export default function ViewPage() {
+    const host_vista=`${host_base}:5173` //XXX:conseguir de host_code
 
 
     return (

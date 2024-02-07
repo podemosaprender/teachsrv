@@ -1,20 +1,26 @@
 
 import React, {  useState } from 'react'; 
 import { TabMenu } from 'primereact/tabmenu';
-import { useSelector } from 'react-redux';
 
-export default function MenuTab() {
+// eslint-disable-next-line react/prop-types
+export default function MenuTab( {onTabChange}) {
 
-    const [activeIndex, setActiveIndex] = useState(3);
-    const path = useSelector(state => state.path.value)
+    const [activeIndex, setActiveIndex] = useState(0);
 
     const items = [
-        { label: 'Home', icon: 'pi pi-home', url: '/' },
+        { label: 'Home', icon: 'pi pi-home' },
 
-        { label: 'src: '+path, icon: 'pi pi-file', url: '/view-code' },
+        { label: 'Codigo', icon: 'pi pi-file' },
 
-        { label: 'Vista', icon: 'pi pi-play', url: '/view-page'}, //pi-microsoft //globe pi-play
+        { label: 'Vista', icon: 'pi pi-play' }, //pi-microsoft //globe pi-play
     ];
+
+    const handleTabChange = (e) => {
+      setActiveIndex(e.index);
+      if (onTabChange) {
+        onTabChange(e.index);
+      }
+    };
 
     return (
        
@@ -24,7 +30,7 @@ export default function MenuTab() {
        <TabMenu
         model={items}
         activeIndex={activeIndex}
-        onTabChange={(e) => setActiveIndex(e.index)}
+        onTabChange={handleTabChange}
       />
 
         </div>
