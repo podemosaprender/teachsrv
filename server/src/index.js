@@ -5,6 +5,7 @@
  * 13215 es el puerto de mi app "nginx only port" en el hosting
  */
 
+const STATIC_PATH='../../ui/dist';
 import express from 'express';
 import cors from 'cors';
 import HttpProxy from 'http-proxy';
@@ -27,8 +28,9 @@ app.use(async (req, res, next) => { //A: proxy other calls to controlled app ser
 	const host= req.headers.host;
 	if (host.startsWith('env_')) {
 		const env_name_UNSAFE= host.replace(/^env_/,'').split('.')[0];
-		const app_url= await api.env_app_url({env_name_UNSAFE});
+		let app_url= await api.env_app_url({env_name_UNSAFE});
 		console.log("PROXY", {app_url, host, req_url: req.originalUrl});
+		app_url= app_url || 'http://localhost:10000'; //XXX
 		if (app_url) {
 			proxy.web(req, res, { target: app_url}) 
 		}
@@ -47,6 +49,8 @@ server.on('upgrade', async (req, socket, head) => { //A: proxy other calls to co
 	} else { next() }
 });
 //S: PROXY }
+
+app.use(express.static(STATIC_PATH));
 
 //A: request WASN'T handled by calling a proxy
 app.use(express.json());
