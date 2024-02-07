@@ -15,14 +15,12 @@ import { PrimeReactProvider } from 'primereact/api';
 
 import store from './state/store.js';
 
-
 ReactDOM.createRoot(document.getElementById('root')).render(
 	<React.StrictMode>
 		<PrimeReactProvider>
-		<Provider store={store}>
-		<App/>
-		</Provider>
-
+			<Provider store={store}>
+				<App/>
+			</Provider>
 		</PrimeReactProvider>
 	</React.StrictMode>,
 )

@@ -1,8 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit'
-import pathReducer from './reactPath/pathSlice'
+import pathReducer from './viewpaths/pathSlice'
 
 export default configureStore({
-  reducer: {     
-path: pathReducer
-}
+	reducer: {     
+		viewpaths: pathReducer
+	}
 })

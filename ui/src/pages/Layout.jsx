@@ -1,15 +1,11 @@
 import { Outlet } from "react-router-dom";
-import MenuTab from "../components/tabMenu";
+import { TabMenu } from "../components/tabmenu";
 
-const Layout =()=>{
-    return (<>
-            <MenuTab></MenuTab>
-            
-            <Outlet/>
-
-    </>
-    
-    )
+export const Layout =()=>{
+	return (<>
+		<TabMenu/>
+		<Outlet/>
+	</>)
 }
 
-export default Layout;
+
