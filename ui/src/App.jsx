@@ -18,37 +18,40 @@ import { Home } from './pages/Home';
 export function App() {
 	const [envName, setEnvName]= useState('pepe'); //XXX:CFG
 	const [allPaths, setAllPaths]= useState([]);
-	const [paths, setPaths]= useState(['App.jsx']);
 	const [codeForPath, setCodeForPath]= useState({});
 	const [activeIndex, setActiveIndex]= useState(0);
 
+	const paths= Object.keys(codeForPath);
 	const activePath= paths[activeIndex-2];
 	if (activePath!=null) { window.location.hash= activePath };
 
-	const setCodeForActivePath= (src) => {
-			console.log("setCodeForActivePath",activePath,src);
-			setCodeForPath({...codeForPath, [activePath]: src})
-	}
+	const updateCodeForPath= (kv,path) => {
+		path= path || activePath;
+		const kv_updated= {...codeForPath[path], ...kv};
+		kv_updated.isLoaded= (kv_updated.src != null);
+		console.log("updatedCodeForPath",path,kv,kv_updated);
+		setCodeForPath({...codeForPath, [path]: kv_updated})
+	};
+
+	const onAddPath= (filePath) => updateCodeForPath({isLoaded: false, path: filePath}, filePath);
 
 	useEffect( () => {
-		if (activePath && codeForPath[activePath]==null) {
-			file_read(envName,activePath).then(setCodeForActivePath);
+		if (activePath && !codeForPath[activePath]?.isLoaded) {
+			file_read(envName,activePath).then(updateCodeForPath);
 		} else if (activeIndex==0) {
-			file_list(envName).then(r => setAllPaths(r))
+			file_list(envName).then(r => setAllPaths(r)) //A: reloads every time you go to home, XXX:limit? refresh button?
 		}
-	}, [activeIndex, paths, setAllPaths]);
+	}, [activeIndex, codeForPath]);
 
-	const onAddPath= (filePath) => { paths.indexOf(filePath)<0 && setPaths([...paths, filePath]) }
-
-	const tabMenuProps= {activeIndex, setActiveIndex, paths }
-	const homeProps= { onAddPath, allPaths }
-	const viewCodeProps= {code: codeForPath[activePath]?.src, setCode: (src) => setCodeForActivePath({...codeForPath[activePath], src})};
+	const tabMenuProps= {activeIndex, setActiveIndex, paths: Object.keys(codeForPath) }
+	const homeProps= { onAddPath, allPaths, codeForPath }
+	const viewCodeProps= {code: codeForPath[activePath]?.src, setCode: (src) => updateCodeForPath({src, edited_ts: new Date()})};
 	//DBG: console.log("codeForPath", activePath, codeForPath, allPaths);
 	return (<>
 		<TabMenu {...tabMenuProps} />
 		{ activeIndex==0 ? <Home {...homeProps} /> :
-			activeIndex==1 ? <ViewPage /> :
-			<ViewCode {...viewCodeProps}/>
+				activeIndex==1 ? <ViewPage /> :
+				<ViewCode {...viewCodeProps}/>
 		}
 	</>)
 }

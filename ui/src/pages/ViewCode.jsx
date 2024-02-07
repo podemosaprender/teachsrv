@@ -1,12 +1,9 @@
-import React, { useMemo, useState } from 'react'; 
+import React, { useState, useCallback } from 'react'; 
 
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { Button } from 'primereact/button';
 
-import { file_read, file_write } from '../services/codeapi';
-
-// eslint-disable-next-line react/prop-types
 export default function ViewCode({code, setCode}) {
 	const [estadoGuardar, setEstadoGuardar] = useState('');
 
@@ -16,10 +13,9 @@ export default function ViewCode({code, setCode}) {
 		setEstadoGuardar('guardado');
 	}
 
-	const onChange = React.useCallback((val, viewUpdate) => {
-		console.log('val:', val);
+	const onChange = useCallback((val, viewUpdate) => {
 		setCode(val);
-	}, []);
+	}, [setCode]);
 
 	return (<>
 			<CodeMirror
