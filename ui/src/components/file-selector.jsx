@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { AutoComplete } from "primereact/autocomplete";
-import { Button } from "primereact/button";
+import { ListBox } from 'primereact/listbox';
 
-export function FileSelector({onAddPath}) {
+export function FileSelector({onAddPath, allPaths}) {
 	const [value, setValue] = useState('App.jsx');
 	const [items, setItems] = useState([]);
 
@@ -13,11 +12,12 @@ export function FileSelector({onAddPath}) {
 
 	return (
 		<div className="card flex justify-content-center">
-			<AutoComplete value={value} suggestions={items} completeMethod={search} onChange={(e) => {
-				//dispatch( viewPathAdd(e.value) )
-				setValue(e.value)}} dropdown 
+      <ListBox filter 
+				value={value} onChange={(e) => {setValue(e.value); onAddPath(e.value.path)}} 
+				options={(allPaths||[]).map(p => ({path: p}))} optionLabel="path"
+				className="w-full" 
+				listStyle={{maxHeight: '50vh'}}
 			/>
-			<Button aria-label="Open" icon="pi pi-plus" onClick={() => onAddPath(value)} />
 		</div>
 	)
 }
