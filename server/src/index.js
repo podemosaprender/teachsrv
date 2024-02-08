@@ -4,8 +4,20 @@
  * abro tunel con # ssh -i *YOUR_KEY* -R 13215:localhost:3000 -o ServerAliveInterval=3 *YOUR_USER*@podemosaprender.org
  * 13215 es el puerto de mi app "nginx only port" en el hosting
  */
+//XXX:LIB {
+import path from 'path';
+import {fileURLToPath} from 'url';
 
-const STATIC_PATH='../../ui/dist';
+const __filename = fileURLToPath(import.meta.url);
+
+// 👇️ "/home/john/Desktop/javascript"
+const __dirname = path.dirname(__filename);
+console.log('directory-name 👉️', __dirname);
+//XXX:LIB }
+
+const STATIC_PATH= __dirname+'/static_ui_generated';
+console.log('STATIC_PATH', STATIC_PATH);
+
 import express from 'express';
 import cors from 'cors';
 import HttpProxy from 'http-proxy';
@@ -15,7 +27,7 @@ import * as api from './api.js';
 const proxy= HttpProxy.createProxyServer({});
 
 const app = express();
-const server = app.listen(3000,'0.0.0.0'); //XXX:sec, all?
+const server = app.listen(process.env.GUEST_PORT || 3000,'0.0.0.0'); //XXX:sec, all?
 app.use(cors()); //XXX:SEC:limitar!
 
 //S: PROXY {
@@ -91,3 +103,5 @@ app.post('/cmd/:env/*', async (req, res) => {
 	res.json({error: 'not implemented'}); //XXX:implement
 });
 //S: COMMANDS }
+
+console.log("SERVER LISTENING ON", process.env.GUEST_PORT)
