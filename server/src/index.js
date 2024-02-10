@@ -1,72 +1,71 @@
-//S: server
+//INFO: CodeEditingServer: static ui, editing files, proxy to GUEST application
+//A: we add handlers to the express app, the order is relevant: the first succeeding ends the chain
 
-/* U: para que estudiantes accedan via pepe.test1.podemosaprender.org
- * abro tunel con # ssh -i *YOUR_KEY* -R 13215:localhost:3000 -o ServerAliveInterval=3 *YOUR_USER*@podemosaprender.org
- * 13215 es el puerto de mi app "nginx only port" en el hosting
- */
-//XXX:LIB {
-import path from 'path';
-import {fileURLToPath} from 'url';
+const CFG_API_JS_PATH= process.argv[2] || process.env.API_JS_PATH || './api_base.js';
+console.log('API, loading from', CFG_API_JS_PATH);
+const { createApiInstance }= await import(CFG_API_JS_PATH);
+const api= createApiInstance();
 
-const __filename = fileURLToPath(import.meta.url);
+const CFG_LISTEN_PORT= process.env.P_NET_GUEST_PORT0 || 3000;
+const CFG_LISTEN_INTERFACES= process.env.P_NET_INTERFACES || '0.0.0.0'; //SEC:ALL as default?
 
-// 👇️ "/home/john/Desktop/javascript"
-const __dirname = path.dirname(__filename);
-console.log('directory-name 👉️', __dirname);
-//XXX:LIB }
-
-const STATIC_PATH= __dirname+'/static_ui_generated';
-console.log('STATIC_PATH', STATIC_PATH);
+import { dir_for_this_script } from './lib.js';
+const CFG_STATIC_PATH= dir_for_this_script()+'/static_ui_generated'; //XXX:CFG
+const CFG_RESULT_DOMAIN_PFX= 'env_';
+console.log('CFG_STATIC_PATH', CFG_STATIC_PATH);
 
 import express from 'express';
 import cors from 'cors';
 import HttpProxy from 'http-proxy';
 
-import * as api from './api.js';
 
 const proxy= HttpProxy.createProxyServer({});
 
 const app = express();
-const server = app.listen(process.env.GUEST_PORT || 3000,'0.0.0.0'); //XXX:sec, all?
+const server = app.listen(CFG_LISTEN_PORT, CFG_LISTEN_INTERFACES);
+console.log("SERVER LISTENING ON", `${CFG_LISTEN_INTERFACES} e.g. http://localhost:${CFG_LISTEN_PORT}`)
+
 app.use(cors()); //XXX:SEC:limitar!
 
 //S: PROXY {
-app.use(async (req, res, next) => { //A: proxy other calls to controlled app servers
+async function proxy_to_urlP(req, protocol) { //U: return a url to proxy to OR null if must not be proxied
+	let proxy_to_url= null; //DFLT
+
 	/* req.headers includes
 	 host: 'st1.test1.podemosaprender.org',
   'x-forwarded-host': 'st1.test1.podemosaprender.org',
   'forwarded-request-uri': '/src/pepe/App.jsx',
 	*/
 	const host= req.headers.host;
-	if (host.startsWith('env_')) {
-		const env_name_UNSAFE= host.replace(/^env_/,'').split('.')[0];
-		let app_url= await api.env_app_url({env_name_UNSAFE});
-		console.log("PROXY", {app_url, host, req_url: req.originalUrl});
-		app_url= app_url || 'http://localhost:10000'; //XXX
-		if (app_url) {
-			proxy.web(req, res, { target: app_url}) 
-		}
-	} else { next() }
+	if (host.startsWith(CFG_RESULT_DOMAIN_PFX)) { 
+		const env_name_UNSAFE= host.split('.')[0].slice(CFG_RESULT_DOMAIN_PFX.length)
+		proxy_to_url= await api.env_app_url({env_name_UNSAFE});
+		console.log("PROXY", {protocol, app_url, host, req_url: req.originalUrl});
+	}
+
+	return proxy_url;
+}
+
+app.use(async (req, res, next) => { //A: proxy calls to EditedApp(s) and dependencies
+	const proxy_to_url= await proxy_to_urlP(req,'HTTP*');
+	if (proxy_to_url) { proxy.web(req, res, { target: proxy_to_url}) } //A: api says "proxy to this url"
+	else { next() }
 });
 
-server.on('upgrade', async (req, socket, head) => { //A: proxy other calls to controlled app WebSocket servers
-	const host= req.headers.host;
-	if (host.startsWith('env_')) {
-		const env_name_UNSAFE= host.replace(/^env_/,'').split('.')[0];
-		const app_url= await api.env_app_url({env_name_UNSAFE});
-		console.log("PROXY WS", {app_url, host, req_url: req.originalUrl});
-		if (app_url) {
-			proxy.ws(req, socket, head,{ target: app_url}) 
-		}			
-	} else { next() }
+server.on('upgrade', async (req, socket, head) => { //A: proxy calls to EditedApp(s) and dependencies (WebSockets)
+	const proxy_to_url= await proxy_to_urlP(req,'HTTP*');
+	if (proxy_to_url) { proxy.ws(req, socket, head,{ target: proxy_to_url}) }	//A: api says "proxy to this url"	
+	else { next() }
 });
 //S: PROXY }
 
-app.use(express.static(STATIC_PATH));
+app.use(express.static(CFG_STATIC_PATH)); //A: serve CodeEditingUI 
 
 //A: request WASN'T handled by calling a proxy
+
 app.use(express.json());
-//S: FILE SERVER {
+
+//S: EDITING FILE SERVER {
 app.get('/src/:env/*', async (req,res) => {
 	const env_name_UNSAFE= req.params.env; 
 	const file_path_UNSAFE= req.params[0]; 
@@ -83,9 +82,9 @@ app.post('/src/:env/*', async (req, res) => {
 	const src= req.body.src;
 	res.json(await api.file_write({env_name_UNSAFE, file_path_UNSAFE, src}))
 } );
-//S: FILE SERVER }
+//S: EDITING FILE SERVER }
 
-//S: COMMANDS {
+//S: EDITING COMMANDS {
 app.get('/cmd/:env/*', async (req,res) => {
 	res.json({ //XXX:to config
 		"file": {
@@ -102,6 +101,5 @@ app.get('/cmd/:env/*', async (req,res) => {
 app.post('/cmd/:env/*', async (req, res) => {
 	res.json({error: 'not implemented'}); //XXX:implement
 });
-//S: COMMANDS }
+//S: EDITING COMMANDS }
 
-console.log("SERVER LISTENING ON", process.env.GUEST_PORT)
