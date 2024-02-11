@@ -3,7 +3,7 @@ import { Button } from 'primereact/button';
 import { ListBox } from 'primereact/listbox';
 import { SelectButton } from 'primereact/selectbutton';
 
-export function FileSelector({onAddPath, allPaths, codeForPath, setActiveIndex}) {
+export function FileSelector({onPathSelectedToWork, allPaths, codeForPath, setActiveIndex}) {
 	const editedPaths= Object.keys(codeForPath)
 	const isEditingSome= editedPaths.length>0;
 	const [statusFilter, setStatusFilter] = useState(isEditingSome ? 'Editing' : 'All');
@@ -43,7 +43,7 @@ export function FileSelector({onAddPath, allPaths, codeForPath, setActiveIndex})
 			</div>
 			<div className="flex-1">
 				<ListBox filter 
-					value={editedPaths} onChange={(e) => onAddPath(e.value.path)} 
+					value={editedPaths} onChange={(e) => onPathSelectedToWork(e.value.path)} 
 					options={options} optionLabel="path"
 					itemTemplate={itemTemplate}
 					className="w-full" 
