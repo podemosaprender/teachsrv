@@ -14,14 +14,16 @@ export function FileSelector({onPathSelectedToWork, allPaths, codeForPath, setAc
 		isChanged: ( codeForPath[p]?.edited_ts > (codeForPath[p]?.loaded_ts||0) )
 	}));
 
-	const itemTemplate= (option) => {
+	const itemTemplate= (option) => { //U: render each item in the list
+		const msg= option.isBeingEdited ? `Edit ${option.path}` : `Start editing ${option.path}`;
 		return (<div className="flex flex-row align-items-center">
 			<div className="flex-1">{option.path}</div>
 			<div className="flex-0">
 				{option.isBeingEdited ? <Button label="XXX git add" /> : ''}
 				<Button 
-				aria-label={option.isBeingEdited ? 'E' : 'P'} 
+				aria-label={msg}
 				icon={option.isBeingEdited ? 'pi pi-file-edit' : 'pi pi-download'} 
+				tooltip={msg}
 				onClick={() => {
 					const idx= editedPaths.indexOf(option.path);
 					if (idx>-1) { setActiveIndex(2+idx) }
@@ -31,15 +33,19 @@ export function FileSelector({onPathSelectedToWork, allPaths, codeForPath, setAc
 	}
 
 	return (<>
-		<div className="card flex flex-column">
-			<div className="flex-0 text-right mb-1">
-				<div>
-					<Button label="XXX open result in another tab" />
-					<Button label="XXX git commit" />
-					<Button label="XXX upload all" />
-					<Button label="XXX new file" />
+		<div className="card">
+			<div>
+				<Button label="XXX: get from server git commit" />
+			</div>
+			<div className="flex flex-columns mb-1">
+				<div className="flex flex-1 flex-wrap gap-1 text-left">
+					<Button aria-label="Upload All" tooltip="Upload all edited files" icon="pi pi-upload" />
+					<Button aria-label="Edit New File" tooltip="Edit New file" icon="pi pi-file-edit"/>
+					<Button aria-label="View EditedApp" tooltip="View EditedApp" icon="pi pi-eye" />
 				</div>
-				<SelectButton value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={["Editing","All"]} />
+				<div className="flex flex-0 text-right" >
+					<SelectButton value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={["Editing","All"]} />
+				</div>
 			</div>
 			<div className="flex-1">
 				<ListBox filter 
