@@ -3,8 +3,20 @@
 import { writeFile, readFile } from 'node:fs/promises';
 import glob from 'fast-glob';
 
-import { CFG_EnvDir } from './cfg.js';
-const CFG_EDITED_APP_DOMAIN_PFX= 'env_';
+const CFG_FILE_PATH= process.env.ENV || './config.json';
+console.log("CONFIG READING FROM", CFG_FILE_PATH)
+const CFG= {
+	EditedApp_ParentDir: '/tmp/x_edited_app', //U:SEC NEVER set to a dir containing files you don't want edited!
+	EditedApp_Proxy_DomainPfx: 'env_',
+}
+try { 
+	Object.assign(CFG, JSON.parse( await readFile( CFG_FILE_PATH ) ) );
+	console.log("CFG READ", CFG_FILE_PATH, CFG);
+} catch (ex) {
+	console.error("CFG reading", CFG_FILE_PATH, ex);
+	process.exit(1);
+}
+//A: CFG is ready
 
 class ApiBase {
 	//S: EDITED_FILES { The core is we read and write SOME source code files
@@ -15,7 +27,7 @@ class ApiBase {
 			.replace(/^[^a-z0-9_]*/gi,'') //A: starts with letter, number or _a (NOT "-" as may be interpreted as parameter)
 			.replace(/[^-_\/\.a-z0-9]*/gi,'') //A: only safe characters
 
-		const safe_path= `${CFG_EnvDir}/env_${env_name}/src/${file_path}` //XXX:CFG
+		const safe_path= `${CFG.EditedApp_ParentDir}/env_${env_name}/src/${file_path}` //XXX:CFG
 		const is_dir= (file_path=='' || file_path.endsWith('/'))
 		const r= {env_name, file_path, safe_path, is_dir}
 		console.log("PATHS FROM REQ", r, {env_name_UNSAFE, file_path_UNSAFE})
@@ -91,8 +103,8 @@ class ApiBase {
 		'forwarded-request-uri': '/src/pepe/App.jsx',
 		*/
 		const host= req.headers.host;
-		if (host.startsWith(CFG_EDITED_APP_DOMAIN_PFX)) { 
-			const env_name_UNSAFE= host.split('.')[0].slice(CFG_EDITED_APP_DOMAIN_PFX.length)
+		if (host.startsWith(CFG.EditedApp_Proxy_DomainPfx)) { 
+			const env_name_UNSAFE= host.split('.')[0].slice(CFG.EditedApp_Proxy_DomainPfx.length)
 			proxy_to_url= await this._env_proxy_url_for({env_name_UNSAFE});
 			console.log("PROXY", {protocol, app_url, host, req_url: req.originalUrl});
 		}
