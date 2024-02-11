@@ -1,0 +1,10 @@
+{
+	"DOC": "config example for a single EditedApp, only jsx is editable",
+  "EditedApp_SingleBaseDir": "../../../x/env_dflt/src",
+  "EditedApp_FileListGlob": "**/*.{js,jsx,css,html}",
+  "EditedApp_FileFilterGlobs": { 
+		"*.jsx": "W",
+		"*": "R"
+	}
+}
+

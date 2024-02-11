@@ -32,19 +32,26 @@ export const url_vista= async (envName) => {
 
 export const file_list= async (envName) => {
 	envName= envName || CFG.env_name_dflt;
-	return await fetch(`${CFG.url_code}/src/${envName}/*`).then( res => res.json());
+	const r= await fetch(`${CFG.url_code}/src/${envName}/*`).then( res => res.json());
+	if (r.error) throw new Error(r.error);
+	return r;
 }
 
 export const file_read= async (envName,filePath) => {
 	envName= envName || CFG.env_name_dflt;
-	return await fetch(`${CFG.url_code}/src/${envName}/${filePath}`).then(res => res.json());
+	const r= await fetch(`${CFG.url_code}/src/${envName}/${filePath}`).then(res => res.json());
+	if (r.error) throw new Error(r.error);
+	return r;
 }
 
 export const file_write= async (envName,filePath,src) => {
 	envName= envName || CFG.env_name_dflt;
-	await fetch(`${CFG.url_code}/src/${envName}/${filePath}`, { 
+	const r= await fetch(`${CFG.url_code}/src/${envName}/${filePath}`, { 
 		method: "POST", headers: {"Content-type": "application/json"}, 
 		body: JSON.stringify({src})
-	});
+	}).then(res => res.json());
+	console.log("XXX",r,r.error,r.error!=null);
+	if (r.error) throw new Error(r.error);
+	return r;
 }
 

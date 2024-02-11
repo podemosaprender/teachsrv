@@ -2,13 +2,18 @@
 
 import { writeFile, readFile } from 'node:fs/promises';
 import glob from 'fast-glob';
+import micromatch from 'micromatch';
 
 const CFG_FILE_PATH= process.env.ENV || './config.json';
 console.log("CONFIG READING FROM", CFG_FILE_PATH)
 const CFG= {
-	EditedApp_ParentDir: '/tmp/x_edited_app', //U:SEC NEVER set to a dir containing files you don't want edited!
+	EditedApp_SingleBaseDir: null, //U: for a single EditedApp and environment
+	EditedApp_MultiParentDir: '/tmp/x_edited_app', //U:SEC NEVER set to a dir containing files you don't want edited!
 	EditedApp_Proxy_DomainPfx: 'env_',
+	EditedApp_FileListGlob: '**/*.{js,jsx,css,ts,tsx,php,py,html}', //U: all files that must be offered for edit/read
+	EditedApp_FileFilterGlobs: { '*': 'W' }, //U: globs -> R|W|DENY globs will be tried in order until an R,W or DENY
 }
+
 try { 
 	Object.assign(CFG, JSON.parse( await readFile( CFG_FILE_PATH ) ) );
 	console.log("CFG READ", CFG_FILE_PATH, CFG);
@@ -27,7 +32,8 @@ class ApiBase {
 			.replace(/^[^a-z0-9_]*/gi,'') //A: starts with letter, number or _a (NOT "-" as may be interpreted as parameter)
 			.replace(/[^-_\/\.a-z0-9]*/gi,'') //A: only safe characters
 
-		const safe_path= `${CFG.EditedApp_ParentDir}/env_${env_name}/src/${file_path}` //XXX:CFG
+		const safe_base_path= CFG.EditedApp_SingleBaseDir || `${CFG.EditedApp_MultiParentDir}/env_${env_name}/src`;
+		const safe_path= `${safe_base_path}/${file_path}`
 		const is_dir= (file_path=='' || file_path.endsWith('/'))
 		const r= {env_name, file_path, safe_path, is_dir}
 		console.log("PATHS FROM REQ", r, {env_name_UNSAFE, file_path_UNSAFE})
@@ -35,13 +41,18 @@ class ApiBase {
 	}
 
 	async _file_whatsAllowed(path) { //U: return R for READ, W for READ+WRITE, '' to DENY even listing
-		return "W"; //XXX:SEC //XXX:IMPLEMENT
+		const match= Object.entries( CFG.EditedApp_FileFilterGlobs ).find( 
+			([glob, permissions]) => micromatch.isMatch(path, glob)
+		);
+		const [why_glob, why_perm]= match || ['NONE','DENY'];
+		console.log(`FILE ALLOWING ${why_perm||'NOTHING'} for ${path} because ${why_glob}`);
+		return why_perm;
 	}
 
 	async file_list(params) { //U: return a list of files that can be edited/viewed in this environment
 		const spec= this._pathsFromReq(params);
 		const paths= await glob(
-			`**/*.{js,jsx,css,ts,tsx,php,py,html}`, //XXX:CFG //XXX:SEC //XXX:add "readonly"
+			CFG.EditedApp_FileListGlob,	
 			{cwd: spec.safe_path}
 		)
 		const r= {};
@@ -81,7 +92,8 @@ class ApiBase {
 				await writeFile(spec.safe_path, src, 'utf8');
 				r.ok= 'saved'
 			} catch (ex) {
-				r.error= `Can't write ${err}`
+				r.error= `Can't write`
+				console.log(`FILE ERROR WRITING ${spec.safe_path} ${ex}`);
 			}
 		}
 		return r;

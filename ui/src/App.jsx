@@ -84,7 +84,7 @@ export function App() {
 			await file_write(envName, activePath, codeForPath[activePath].src)
 			msgShow(activePath, 'success', 'Uploaded');	
 		} catch (ex) {
-			msgShow(activePath, 'error', 'Not uploaded');	
+			msgShow(activePath+' '+ex, 'error', 'Not uploaded');	
 		}
 	};
 
