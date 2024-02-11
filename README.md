@@ -2,6 +2,8 @@
 
 A server + very lightweight editor to teach using humble devices as terminals, without internet connectivity, etc.
 
+Get a glimpse at http://viejo.podemosaprender.org/teachsrv/
+
 The code on this repo provides:
 * CodeEditingServer: 
    * (safely) editing (specific) files in the local filesystem
