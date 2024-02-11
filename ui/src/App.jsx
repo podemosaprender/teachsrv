@@ -11,11 +11,11 @@ import { Toast } from 'primereact/toast';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
 
-import { setConfig as apiSetConfig, file_list, file_read, file_write } from './services/codeapi';
+import { setConfig as apiSetConfig, file_list, file_read, file_write, url_live } from './services/codeapi';
 
 import { TabMenu } from './components/tabmenu';
-import ViewCode from './pages/ViewCode';
-import ViewPage from './pages/ViewPage';
+import { ViewCode } from './pages/ViewCode';
+import { ViewLive } from './pages/ViewLive';
 import { Home } from './pages/Home';
 import { LoginPage } from './pages/LoginPage';
 
@@ -38,6 +38,10 @@ export function App() {
 	}
 
 	const [envName, setEnvName]= useState(''); //U: ''=default from config, teachers may use more than one if allowed
+
+	const [ urlLive, setUrlLive ]= useState(); //U: url to see the live site
+	useEffect( () => { url_live( envName ).then( u => { console.log("L",u); setUrlLive(u) } )		
+	}, [config, envName]);
 
 	const [allPaths, setAllPaths]= useState([]); //U: path -> R|W, all files a user can read or edit in this env
 	const [codeForPath, setCodeForPath]= useState({}); //U: path -> string, the read or edited code for this path
@@ -96,7 +100,7 @@ export function App() {
 		{ label: 'home', icon: 'pi pi-home', command: () => setActiveIndex(0) },
 	];
 	const tabMenuProps= { items: tabMenuItems }
-	const homeProps= { onPathSelectedToWork, allPaths, codeForPath, setActiveIndex }
+	const homeProps= { onPathSelectedToWork, allPaths, codeForPath, setActiveIndex, urlLive }
 	const viewCodeProps= {
 		code: codeForPath[activePath]?.src, 
 		setCode: (src) => updateOurCopyOfCodeForPath({src, path: activePath, edited_ts: new Date()}, activePath),
@@ -108,10 +112,10 @@ export function App() {
 		<Toast ref={toast} />
 		{ config == null ? (<LoginPage setConfig={onSetConfig} />) 
 			: (<>
-					{ activeIndex!= 0 ? <TabMenu {...tabMenuProps} /> : '' }
+					{ activeIndex> 1 ? <TabMenu {...tabMenuProps} /> : '' }
 					{ 
 						activeIndex==0 ? <Home {...homeProps} /> :
-						activeIndex==1 ? <ViewPage /> :
+						activeIndex==1 ? <ViewLive url={urlLive} onGoBack={() => setActiveIndex(0)} /> :
 						<ViewCode {...viewCodeProps}/>
 					}
 			  </>)

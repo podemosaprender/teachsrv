@@ -21,7 +21,10 @@ This allows you, TheAdministrator, to run the EditedApp wherever you want, e.g. 
 
 ## Configuration
 
-XXX:DOC
+**BE CAREFUL WITH SECURITY**: the CodeEditingServer can let hostile actors **read or write** dangerous files or **access services** on the computer it's running on or others on the same net if misconfigured! Reading the source code to understand what you are doing is strongly recommended. Running the CodeEditingServer and the EditedApp inside a VirtualBox may mitigate some risks compared to running it unrestrained in your host operating system.
+
+You can pass an ENV environment variable with the path to a config file to the CodeEditingServer. For example:
+
 ~~~
 ENV=config_example_single_app.json node index.js
 ~~~

@@ -41,7 +41,7 @@ export function FileSelector({onPathSelectedToWork, allPaths, codeForPath, setAc
 				<div className="flex flex-1 flex-wrap gap-1 text-left">
 					<Button aria-label="Upload All" tooltip="Upload all edited files" icon="pi pi-upload" />
 					<Button aria-label="Edit New File" tooltip="Edit New file" icon="pi pi-file-edit"/>
-					<Button aria-label="View EditedApp" tooltip="View EditedApp" icon="pi pi-eye" />
+					<Button aria-label="View EditedApp" tooltip="View EditedApp" icon="pi pi-eye" onClick={() => setActiveIndex(1)}/>
 				</div>
 				<div className="flex flex-0 text-right" >
 					<SelectButton value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={["Editing","All"]} />

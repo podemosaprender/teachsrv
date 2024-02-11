@@ -19,15 +19,16 @@ export const setConfig = async (tokenText) => {
 	try { 
 		const token_cfg= JSON.parse(tokenText); 
 		//XXX:validate with server!
-		Object.assign(CFG, token_cfg);
+		Object.assign(CFG, cfgApplyDefaults(), token_cfg);
+		console.log("CFG", CFG);
 	} catch (ex) {
 		throw new Error('Please check you copied all the characters','error','Invalid token');
 	}
 }
 
-export const url_vista= async (envName) => {
+export const url_live= async (envName) => {
 	envName= envName || CFG.env_name_dflt;
-	return CFG.url_code.replace('://',`://env_${envName}.`); 
+	return CFG.url_live || CFG.url_code.replace('://',`://env_${envName}.`); 
 }
 
 export const file_list= async (envName) => {
