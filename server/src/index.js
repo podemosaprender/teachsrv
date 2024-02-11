@@ -69,14 +69,15 @@ app.post(CFG_API_PFX+'/src/:env/*', async (req, res) => {
 //S: EDITING COMMANDS {
 app.get(CFG_API_PFX+'/cmd/:env/*', async (req,res) => {
 	const env_name_UNSAFE= req.params.env; 
-	const r= await api.env_commands({env_name_UNSAFE,''})
+	const file_path_UNSAFE= req.params[0]; 
+	const r= await api.env_commands({env_name_UNSAFE,file_path_UNSAFE})
 	res.json(r);
 })
 
 app.post(CFG_API_PFX+'/cmd/:env/*', async (req, res) => {
 	const env_name_UNSAFE= req.params.env; 
 	try {
-		const r= await api.env_command_execute({env_name_UNSAFE,req.body})
+		const r= await api.env_command_execute({env_name_UNSAFE,data:req.body})
 		res.json(r);
 	} catch (ex) { res.json({error: ex+''}); }
 	res.json({error: 'not implemented'}); 

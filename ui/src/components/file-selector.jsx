@@ -5,10 +5,10 @@ import { SelectButton } from 'primereact/selectbutton';
 
 export function FileSelector({onAddPath, allPaths, codeForPath, setActiveIndex}) {
 	const editedPaths= Object.keys(codeForPath)
-	const isingSome= editedPaths.length>0;
-	const [statusFilter, setStatusFilter] = useState(isingSome ? 'Editing' : 'All');
+	const isEditingSome= editedPaths.length>0;
+	const [statusFilter, setStatusFilter] = useState(isEditingSome ? 'Editing' : 'All');
 
-	const options= (statusFilter=='All' ? allPaths : editedPaths).map(p => ({
+	const options= (statusFilter=='All' ? Object.keys(allPaths) : editedPaths).map(p => ({
 		path: p,
 		isBeingEdited: codeForPath[p]!=null,
 		isChanged: ( codeForPath[p]?.edited_ts > (codeForPath[p]?.loaded_ts||0) )

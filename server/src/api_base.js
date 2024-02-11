@@ -33,14 +33,14 @@ class ApiBase {
 			{cwd: spec.safe_path}
 		)
 		const r= {};
-		await Promise.all(paths.forEach( p => { const a= await this._file_whatsAllowed(p); if (a) kv[p]= a; }))
+		await Promise.all(paths.map( async p => { const a= await this._file_whatsAllowed(p); if (a) r[p]= a; }))
 		return r;
 	}
 
 	async file_read(params) { //U: return the content of a file that can be edited/viewed in this environment
 		const spec= this._pathsFromReq(params);
 		const r= {path: spec.file_path} 
-		const a= await this._file_whatsAllowed(p);	
+		const a= await this._file_whatsAllowed(spec.file_path);	
 		if (a!='R' && a!='W') { r.error=`Not allowed` }
 		else {
 			try {
@@ -62,12 +62,12 @@ class ApiBase {
 		else if (src==null) { return { ...r, error: "Source is null"} }
 		//A: not a dir, has src
 
-		const a= await this._file_whatsAllowed(p);	
+		const a= await this._file_whatsAllowed(spec.file_path);	
 		if (a!='W') { r.error=`Not allowed` }
 		else { //A: can write
 			try {
 				await writeFile(spec.safe_path, src, 'utf8');
-				r.ok= 'saved'}
+				r.ok= 'saved'
 			} catch (ex) {
 				r.error= `Can't write ${err}`
 			}
@@ -97,7 +97,7 @@ class ApiBase {
 			console.log("PROXY", {protocol, app_url, host, req_url: req.originalUrl});
 		}
 
-		return proxy_url;
+		return proxy_to_url;
 	}
 	//S: EDITED_APP }
 
@@ -108,7 +108,7 @@ class ApiBase {
 			"env": { //U: Commands for the whole environment e.g. restarting the edited app, git commit, etc
 				"ping": {}, //U: just an example
 			}
-		});
+		};
 	}
 
 	async env_command_execute({env_name_UNSAFE, data}) { //U: execute the requested command, CHECK for security!
