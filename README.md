@@ -19,6 +19,13 @@ This allows you, TheAdministrator, to run the EditedApp wherever you want, e.g. 
 
 * Teaching: Clarice wants to teach the basics of programming to Daniel. THE PROBLEM is Daniel may have just a phone or a tablet. Even with a computer it'd be frustrating to waste the first hours of a course fighting installation issues, arcane Window$ settings, etc. Clarice wants a simple web editor focused on the concepts and examples that will help Daniel the most, everything else she can run on her computer, even editing or fixing things on the flight, BUT Daniel needs to see the final results.
 
+## Configuration
+
+XXX:DOC
+~~~
+ENV=config_example_single_app.json node index.js
+~~~
+
 ## Run widh sdt_env_dev
 
 ~~~

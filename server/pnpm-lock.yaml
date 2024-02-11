@@ -17,6 +17,9 @@ dependencies:
   http-proxy:
     specifier: ^1.18.1
     version: 1.18.1
+  micromatch:
+    specifier: ^4.0.5
+    version: 4.0.5
 
 packages:
 

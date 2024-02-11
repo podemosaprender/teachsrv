@@ -5,6 +5,7 @@
   "EditedApp_FileFilterGlobs": { 
 		"*.jsx": "W",
 		"*": "R"
-	}
+	},
+	"EditedApp_Proxy_DomainRules": { "^live\\.": "http://localhost:5173" }
 }
 

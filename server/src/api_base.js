@@ -9,9 +9,11 @@ console.log("CONFIG READING FROM", CFG_FILE_PATH)
 const CFG= {
 	EditedApp_SingleBaseDir: null, //U: for a single EditedApp and environment
 	EditedApp_MultiParentDir: '/tmp/x_edited_app', //U:SEC NEVER set to a dir containing files you don't want edited!
-	EditedApp_Proxy_DomainPfx: 'env_',
 	EditedApp_FileListGlob: '**/*.{js,jsx,css,ts,tsx,php,py,html}', //U: all files that must be offered for edit/read
 	EditedApp_FileFilterGlobs: { '*': 'W' }, //U: globs -> R|W|DENY globs will be tried in order until an R,W or DENY
+	EditedApp_Proxy_DomainRules: { //U: regex -> full url ($1, ...$9) etc. will be replaced by captured groups)
+		'^env_([^\.]+)': 'ASK',
+	}
 }
 
 try { 
@@ -25,6 +27,8 @@ try {
 
 class ApiBase {
 	//S: EDITED_FILES { The core is we read and write SOME source code files
+
+	_proxyCache= {} //U: host -> proxy_to_url, react EditedApp makes a lot of requests
 
 	_pathsFromReq({env_name_UNSAFE, file_path_UNSAFE}) { //U: get SAFE paths from request=UNSAFE environment name and path
 		const env_name= env_name_UNSAFE.replace(/[^a-z\d]/gi,''); //XXX:SEC allowed? 
@@ -101,27 +105,29 @@ class ApiBase {
 	//S: EDITED_FILES }
 
 	//S: EDITED_APP { 
-	async _env_proxy_url_for({env_name_UNSAFE}) {
-		const spec= this._pathsFromReq({env_name_UNSAFE, file_path_UNSAFE: ''})
-		return ENV[spec.env_name]?.url
-	}
-
 	async proxy_to_urlP(req, protocol) { //U: return a url to proxy to OR null if must not be proxied
-		let proxy_to_url= null; //DFLT
-
 		/* req.headers includes
 		 host: 'st1.test1.podemosaprender.org',
 		'x-forwarded-host': 'st1.test1.podemosaprender.org',
 		'forwarded-request-uri': '/src/pepe/App.jsx',
 		*/
 		const host= req.headers.host;
-		if (host.startsWith(CFG.EditedApp_Proxy_DomainPfx)) { 
-			const env_name_UNSAFE= host.split('.')[0].slice(CFG.EditedApp_Proxy_DomainPfx.length)
-			proxy_to_url= await this._env_proxy_url_for({env_name_UNSAFE});
-			console.log("PROXY", {protocol, app_url, host, req_url: req.originalUrl});
+		let proxy_to_url= this._proxyCache[host];
+		if (proxy_to_url==null) {
+			let match_groups;
+			const match_rule = Object.entries( CFG.EditedApp_Proxy_DomainRules ).find(
+				([ regex_pattern, result_pattern ]) => (match_groups= host.match(new RegExp(regex_pattern)))
+			);
+			if (match_groups) {
+				const result_pattern= match_rule[1];
+				proxy_to_url= result_pattern.replace(/\$[0-9]/g, (idx) => match_groups[idx]);
+				console.log("PROXY",{host,proxy_to_url,match_rule});
+			}
+			if (proxy_to_url!="NO:IGNORE") { //A: put first a rule can return NO:IGNORE to not even cache the result
+				this._proxyCache[ host ]= proxy_to_url;
+			}
 		}
-
-		return proxy_to_url;
+		return (proxy_to_url && !proxy_to_url.startsWith('NO:')) ?  proxy_to_url : null; 
 	}
 	//S: EDITED_APP }
 
