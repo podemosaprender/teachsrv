@@ -27,6 +27,50 @@ console.log("SERVER LISTENING ON", `${CFG_LISTEN_INTERFACES} e.g. http://localho
 
 app.use(cors()); //XXX:SEC:limitar!
 
+//S: Token validation {
+
+import fs from 'node:fs';
+
+const CFG_TOKENS_JSON_PATH = process.env.CFG_TOKENS_JSON_PATH
+const CFG_TOKENS_KV = CFG_TOKENS_JSON_PATH ? JSON.parse( fs.readFileSync(CFG_TOKENS_JSON_PATH,"utf8")) : {};
+const local_token_exists = async function(auth_token) {
+	return CFG_TOKENS_KV[auth_token]
+}
+
+const jwt_auth_is_valid = async function(auth_token) {
+
+	return false; //XXX: implementar
+
+}
+
+const validateTokenMiddleware = async function (req, res, next) {
+
+	const auth_token = req.headers.authorization?.split("Bearer ")[1]
+
+	console.log('validateTokenMiddleware', auth_token)
+
+	if ( 
+		auth_token && (
+			(await local_token_exists(auth_token)) ||
+			(await jwt_auth_is_valid(auth_token))
+		)
+	) {
+		next();
+		return;
+	};
+
+	//A: no valid token
+
+	res.setHeader('Content-Type', 'application/json');
+	const errorX = {error: "Token not valid."}
+	res.status(401).send(errorX);
+	
+}
+  
+app.use(validateTokenMiddleware)
+
+//S: Token validation }
+
 //S: PROXY {
 app.use(async (req, res, next) => { //A: proxy calls to EditedApp(s) and dependencies
 	const proxy_to_url= await api.proxy_to_urlP(req,'HTTP*');
