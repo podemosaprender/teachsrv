@@ -17,7 +17,7 @@ const CFG= {
 }
 
 try { 
-	Object.assign(CFG, JSON.parse( await readFile( CFG_FILE_PATH ) ) );
+	Object.assign(CFG, CFG_FILE_PATH!='NO_CONFIG' ? JSON.parse( await readFile( CFG_FILE_PATH ) ) : {} );
 	console.log("CFG READ", CFG_FILE_PATH, CFG);
 } catch (ex) {
 	console.error("CFG reading", CFG_FILE_PATH, ex);
@@ -33,8 +33,16 @@ class ApiBase {
 	_pathsFromReq({env_name_UNSAFE, file_path_UNSAFE}) { //U: get SAFE paths from request=UNSAFE environment name and path
 		const env_name= env_name_UNSAFE.replace(/[^a-z\d]/gi,''); //XXX:SEC allowed? 
 		const file_path= file_path_UNSAFE
-			.replace(/^[^a-z0-9_]*/gi,'') //A: starts with letter, number or _a (NOT "-" as may be interpreted as parameter)
-			.replace(/[^-_\/\.a-z0-9]*/gi,'') //A: only safe characters
+			.replace(/([\/\\]+\.*)+/g,'/')	//A: no /. or //
+			.replace(/^[\.\/]+/,'') //A: no / first
+			.replace(/[\.\/]+$/,'') //A: no / last
+			//DBG: .replace(/.*/, (s) => {console.log(s); return s})
+			.split(/[\/\\]/).map(e => ( e
+				.replace(/^[^a-z0-9_]*/gi,'') //A: starts with letter, number or _a (NOT "-" as may be interpreted as parameter)
+				.replace(/[^-_\.a-z0-9]*/gi,'') //A: only safe characters
+				|| 'NO_EMPTY'
+			))
+			.join('/');
 
 		const safe_base_path= CFG.EditedApp_SingleBaseDir || `${CFG.EditedApp_MultiParentDir}/env_${env_name}/src`;
 		const safe_path= `${safe_base_path}/${file_path}`
