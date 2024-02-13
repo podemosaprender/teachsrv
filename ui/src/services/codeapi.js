@@ -33,14 +33,14 @@ export const url_live= async (envName) => {
 
 export const file_list= async (envName) => {
 	envName= envName || CFG.env_name_dflt;
-	const r= await fetch(`${CFG.url_code}/src/${envName}/*`).then( res => res.json());
+	const r= await fetch(`${CFG.url_code}/src/${envName}/*`, {headers: {"Authorization": `Bearer ${CFG.token}`}}).then( res => res.json());
 	if (r.error) throw new Error(r.error);
 	return r;
 }
 
 export const file_read= async (envName,filePath) => {
 	envName= envName || CFG.env_name_dflt;
-	const r= await fetch(`${CFG.url_code}/src/${envName}/${filePath}`).then(res => res.json());
+	const r= await fetch(`${CFG.url_code}/src/${envName}/${filePath}`, {headers: {"Authorization": `Bearer ${CFG.token}`}}).then(res => res.json());
 	if (r.error) throw new Error(r.error);
 	return r;
 }
@@ -48,7 +48,7 @@ export const file_read= async (envName,filePath) => {
 export const file_write= async (envName,filePath,src) => {
 	envName= envName || CFG.env_name_dflt;
 	const r= await fetch(`${CFG.url_code}/src/${envName}/${filePath}`, { 
-		method: "POST", headers: {"Content-type": "application/json"}, 
+		method: "POST", headers: {"Content-type": "application/json", "Authorization": `Bearer ${CFG.token}`}, 
 		body: JSON.stringify({src})
 	}).then(res => res.json());
 	console.log("XXX",r,r.error,r.error!=null);

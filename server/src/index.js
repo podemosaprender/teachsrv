@@ -33,14 +33,27 @@ import fs from 'node:fs';
 
 const CFG_TOKENS_JSON_PATH = process.env.CFG_TOKENS_JSON_PATH
 const CFG_TOKENS_KV = CFG_TOKENS_JSON_PATH ? JSON.parse( fs.readFileSync(CFG_TOKENS_JSON_PATH,"utf8")) : {};
+
+const CFG_TOKENS_KEY_PATH = process.env.CFG_TOKENS_KEY_PATH
+const CFG_TOKENS_KEY = CFG_TOKENS_KEY_PATH ? fs.readFileSync(CFG_TOKENS_KEY_PATH,"utf8") : null;
+
 const local_token_exists = async function(auth_token) {
 	return CFG_TOKENS_KV[auth_token]
 }
 
-const jwt_auth_is_valid = async function(auth_token) {
+import jwt from 'jsonwebtoken';
 
-	return false; //XXX: implementar
+function jwt_auth_is_valid(auth_token) {
+	if (auth_token == null || CFG_TOKENS_KEY == null) return false;
 
+	console.log(CFG_TOKENS_KEY)
+
+	return new Promise( (onOk,onError) => {
+		jwt.verify(auth_token, CFG_TOKENS_KEY, function(err, decoded) {
+			if (err) { console.error("token", err); onError(err) }
+			else { console.log("token",decoded); onOk(decoded) }
+		})
+	});
 }
 
 const validateTokenMiddleware = async function (req, res, next) {
@@ -49,7 +62,7 @@ const validateTokenMiddleware = async function (req, res, next) {
 
 	console.log('validateTokenMiddleware', auth_token)
 
-	if ( 
+	try { if ( 
 		auth_token && (
 			(await local_token_exists(auth_token)) ||
 			(await jwt_auth_is_valid(auth_token))
@@ -57,7 +70,7 @@ const validateTokenMiddleware = async function (req, res, next) {
 	) {
 		next();
 		return;
-	};
+	}; } catch (ex) {} //A: handled below
 
 	//A: no valid token
 

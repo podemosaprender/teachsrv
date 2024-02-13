@@ -51,3 +51,10 @@ rm -Rf server/src/static_ui_generated ; cp -r ui/dist server/src/static_ui_gener
 ~~~
 CFG_TOKENS_JSON_PATH=../example-tokens.json node index.js 
 ~~~
+
+https://api1.o-o.fyi/xp.cgi/docs#/default/login_for_access_token_auth_token_post
+
+~~~
+curl https://api1.o-o.fyi/token_key_public.pem -o token_key_public.pem
+CFG_TOKENS_KEY_PATH=../token_key_public.pem node index.js 
+~~~

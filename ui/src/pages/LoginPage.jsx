@@ -9,7 +9,8 @@ const SAMPLE_CONFIG=`{
 	"DOC2": "You may wan't to play with the urls in the next values too",
 	"DOC3": "use the browser network console to see what happens",
 	"url_live": "https://mauriciocap.com",
-	"url_code": "http://localhost:3000"
+	"url_code": "http://localhost:3000",
+	"token": "58394058227427124345"
 }`;
 
 export function LoginPage({setConfig}) {
