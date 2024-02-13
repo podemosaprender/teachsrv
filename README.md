@@ -45,3 +45,9 @@ rm -Rf server/src/static_ui_generated ; cp -r ui/dist server/src/static_ui_gener
  * 13215 es el puerto de mi app "nginx only port" en el hosting
  */
 ~~~
+
+## Authentication 
+
+~~~
+CFG_TOKENS_JSON_PATH=../example-tokens.json node index.js 
+~~~
