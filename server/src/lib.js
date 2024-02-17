@@ -11,6 +11,14 @@ export function delay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
+import crypto from 'crypto';
+export async function token(len) {
+	return new Promise( (onOk, onErr) => crypto.randomBytes(len, (err, buffer) => { 
+		if (err) onErr(err)
+		else onOk(buffer.toString('base64'))
+	}) )
+}
+
 import { exec } from 'node:child_process';
 export function exec_a(cmd) {
 	return new Promise( (onOk, onErr) => {

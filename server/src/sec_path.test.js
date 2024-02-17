@@ -72,6 +72,14 @@ describe('path: safe paths ok', () => {
     assert.strictEqual(pathToSafe('test/two..jsx'),'/tmp/x_edited_app/env_testEnvName/src/test/two..jsx')
   });
 
+	it('must pass list files', () => {
+    assert.strictEqual(pathToSafe('test/x/*'),'/tmp/x_edited_app/env_testEnvName/src/test/x')
+  });
+
+	it('must pass list ALL files, as handled by api', () => {
+    assert.strictEqual(pathToSafe('*'),'/tmp/x_edited_app/env_testEnvName/src/NO_EMPTY')
+  });
+
 });
 
 

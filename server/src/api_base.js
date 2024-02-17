@@ -12,6 +12,7 @@ const CFG= {
 	EditedApp_FileListGlob: '**/*.{js,jsx,css,ts,tsx,php,py,html}', //U: all files that must be offered for edit/read
 	EditedApp_FileFilterGlobs: { '*': 'W' }, //U: globs -> R|W|DENY globs will be tried in order until an R,W or DENY
 	EditedApp_Proxy_DomainRules: { //U: regex -> full url ($1, ...$9) etc. will be replaced by captured groups)
+		'^ex_pa': 'https://www.podemosaprender.org',
 		'^env_([^\.]+)': 'ASK',
 	}
 }
@@ -33,6 +34,7 @@ class ApiBase {
 	_pathsFromReq({env_name_UNSAFE, file_path_UNSAFE}) { //U: get SAFE paths from request=UNSAFE environment name and path
 		const env_name= env_name_UNSAFE.replace(/[^a-z\d]/gi,''); //XXX:SEC allowed? 
 		const file_path= file_path_UNSAFE
+			.replace(/\/?\*$/,'') //A: in requests for lists
 			.replace(/([\/\\]+\.*)+/g,'/')	//A: no /. or //
 			.replace(/^[\.\/]+/,'') //A: no / first
 			.replace(/[\.\/]+$/,'') //A: no / last
@@ -63,12 +65,14 @@ class ApiBase {
 
 	async file_list(params) { //U: return a list of files that can be edited/viewed in this environment
 		const spec= this._pathsFromReq(params);
+		const path_clean= spec.safe_path.replace(/\/NO_EMPTY$/,''); //A: list all files
 		const paths= await glob(
 			CFG.EditedApp_FileListGlob,	
-			{cwd: spec.safe_path}
+			{cwd: path_clean}
 		)
 		const r= {};
 		await Promise.all(paths.map( async p => { const a= await this._file_whatsAllowed(p); if (a) r[p]= a; }))
+		//DBG: console.log("file_list",path_clean,r);
 		return r;
 	}
 
