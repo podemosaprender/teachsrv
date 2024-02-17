@@ -3,7 +3,7 @@ import { Button } from 'primereact/button';
 import { ListBox } from 'primereact/listbox';
 import { SelectButton } from 'primereact/selectbutton';
 
-export function FileSelector({onPathSelectedToWork, allPaths, codeForPath, setActiveIndex}) {
+export function FileSelector({onPathSelectedToWork, allPaths, codeForPath, setActiveIndex, onRefreshAllPaths}) {
 	const editedPaths= Object.keys(codeForPath)
 	const isEditingSome= editedPaths.length>0;
 	const [statusFilter, setStatusFilter] = useState(isEditingSome ? 'Editing' : 'All');
@@ -43,7 +43,8 @@ export function FileSelector({onPathSelectedToWork, allPaths, codeForPath, setAc
 					<Button aria-label="Edit New File" tooltip="Edit New file" icon="pi pi-file-edit"/>
 					<Button aria-label="View EditedApp" tooltip="View EditedApp" icon="pi pi-eye" onClick={() => setActiveIndex(1)}/>
 				</div>
-				<div className="flex flex-0 text-right" >
+				<div className="flex flex-0 text-right gap-1" >
+					<Button tooltip="Refresh file list" icon="pi pi-refresh" onClick={onRefreshAllPaths}/>
 					<SelectButton value={statusFilter} onChange={(e) => setStatusFilter(e.value)} options={["Editing","All"]} />
 				</div>
 			</div>

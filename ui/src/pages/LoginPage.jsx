@@ -14,7 +14,8 @@ const DEFAULT_CONFIG= {
 	"DOC3": "use the browser network console to see what happens",
 	"url_live": "http://live.localhost:3000",
 	"url_code": "http://localhost:3000",
-	"needs_login_at": "http://localhost:8000/auth/login?scope=editor&redirect_uri={{my_uri}}&extra_data={{cfg}}"
+	"needs_login_at": "https://api1.o-o.fyi/auth/login?scope=editor&redirect_uri={{my_uri}}&extra_data={{cfg}}",
+	"needs_claim_at": "https://api1.o-o.fyi/auth/token/claim"
 }
 
 export function LoginPage({setConfig}) {
@@ -52,13 +53,16 @@ export function LoginPage({setConfig}) {
 			if (typeof(d)=="object") {
 				if (d.needs_login_at) {
 					const cfg_clean= {...d}; delete cfg_clean.needs_login_at;	
+					const claim_url= d.needs_claim_at || d.needs_login_at.match(/https?:\/\/[^\/]+/)[0];
 					const url= (
 						d.needs_login_at
 						.replace('{{my_uri}}',encodeURIComponent(my_uri))
 						.replace('{{cfg}}',encodeURIComponent(JSON.stringify(cfg_clean)))
+						+ '&state='+encodeURIComponent(claim_url)
 					);
-					confirm(`You will be redirected to login at ${url.slice(0,100)}...`);
-					location.href= url; //A:NAVIGATE!
+					if (confirm(`You will be redirected to login at ${url.slice(0,100)}...`)) {
+						location.href= url; //A:NAVIGATE!
+					}
 				} else {
 					const cfg= {
 						...DEFAULT_CONFIG, 

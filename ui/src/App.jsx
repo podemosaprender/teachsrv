@@ -78,6 +78,8 @@ export function App() {
 		}
 	}
 
+	const onRefreshAllPaths= () => ensurePathDataForView('*file_list*');
+
 	useEffect( () => {
 		ensurePathDataForView( activeIndex==0 ? '*file_list*' : activePath );
 	}, [config, activeIndex, codeForPath]);
@@ -101,7 +103,7 @@ export function App() {
 		{ label: 'home', icon: 'pi pi-home', command: () => setActiveIndex(0) },
 	];
 	const tabMenuProps= { items: tabMenuItems }
-	const homeProps= { onPathSelectedToWork, allPaths, codeForPath, setActiveIndex, urlLive }
+	const homeProps= { onPathSelectedToWork, allPaths, codeForPath, setActiveIndex, urlLive, onRefreshAllPaths }
 	const viewCodeProps= {
 		code: codeForPath[activePath]?.src, 
 		setCode: (src) => updateOurCopyOfCodeForPath({src, path: activePath, edited_ts: new Date()}, activePath),
