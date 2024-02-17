@@ -1,27 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
 
-const SAMPLE_CONFIG=`{
+import { enc_b64url, enc_b64url_r } from '../rte/util/b64url';
+import { paramsFromURL } from '../rte/util/urlparams';
+import { getTokenFromDocLocation } from '../services/loginapi';
+
+const DEFAULT_CONFIG= {
 	"DOC0": "Replace all this with the token you received",
-	"DOC1": "If just testing (no token) press [Login], reload to come back here.",
+	"DOC1": "If you are just testing (no token) press [Login], reload to come back here.",
 	"DOC2": "You may wan't to play with the urls in the next values too",
 	"DOC3": "use the browser network console to see what happens",
-	"url_live": "https://mauriciocap.com",
+	"url_live": "http://live.localhost:3000",
 	"url_code": "http://localhost:3000",
-	"token": "58394058227427124345"
-}`;
+	"needs_login_at": "http://localhost:8000/auth/login?scope=editor&extra_data={{cfg}}"
+}
 
 export function LoginPage({setConfig}) {
-	const [ cfgData, setCfgData ]= useState(SAMPLE_CONFIG);
+	const [ cfgStr, setCfgStr ]= useState('');
+	const [ cfgURL, setCfgURL ]= useState('');
+
+	useEffect(() => { 
+		const discoverStatus= async () => {
+			const tkSts= await getTokenFromDocLocation();
+			if (tkSts) { //A: returns from OAuth, we got a code and claimed a token
+				const cfg= {...tkSts[1].not_validated, token: tkSts[0]}; //XXX:make compatible with other OAuth2
+				setCfgStr( JSON.stringify(cfg, null, 2) ); 
+			} else {
+				const params= paramsFromURL()
+				let s= params.get('cfg'); try { s= enc_b64url_r(s) } catch(ex) {} //A: just try
+				setCfgStr(s || JSON.stringify(DEFAULT_CONFIG,0,2) )
+			}
+		};
+		discoverStatus();
+	},[]);
+
+	
+	const onCfgStrChange = (e) => {
+		const s= e.target.value;
+		setCfgStr(s);
+		setCfgURL(location.href.replace(/[?\#].*$/,'')+'?cfg='+(s.match(/[^\w]/) ? enc_b64url(s) : s))
+	}
+
+	const onLoginBtn= () => {
+		let dec= cfgStr; try { dec= enc_b64url_r(cfgStr) } catch (ex) {}; //A: just try!
+		let d= dec; try { d= JSON.parse(dec); } catch (ex) {}; //A: just try!
+		//DBG: console.log("LoginData",typeof(d),d);
+
+		if (d!=null) {
+			if (typeof(d)=="object") {
+				if (d.needs_login_at) {
+					const cfg_clean= {...d}; delete cfg_clean.needs_login_at;	
+					const url= d.needs_login_at.replace('{{cfg}}',encodeURIComponent(JSON.stringify(cfg_clean)))
+					confirm(`You will be redirected to login at ${url.slice(0,100)}...`);
+					location.href= url; //A:NAVIGATE!
+				} else {
+					const cfg= {
+						...DEFAULT_CONFIG, 
+						...( d.not_validated ? { ...d.not_validated, token: XXX} : d)
+					}
+					setConfig(cfg);
+				}
+			} else { //A: just an opaque token
+				if (!d.match(/[{}\":]/) || !confirm("Check if you pasted the config correctly?")) {
+					const cfg= {...DEFAULT_CONFIG, token: d}
+					setConfig(cfg);
+				}
+			}
+		}
+	}
 
 	return (<>
 		<h3>Paste the token you received</h3>
+		<div>
 		<InputTextarea 
-			value={cfgData} onChange={ (e) => setCfgData(e.target.value) }
+			value={cfgStr} onChange={onCfgStrChange}
 			style={{width: '95vw', height: '50vh'}}	
-		/> <br />
-		<Button label="LogIn" onClick={() => setConfig(cfgData)} />
+		/>
+		</div>
+		<div className="flex flex-columns gap-1 m-2">
+			<Button label="Continue" onClick={onLoginBtn} />
+			<a className="p-button p-button-outlined font-bold" href={cfgURL} target="_blank">share config</a>
+		</div>
 	</>)
 }

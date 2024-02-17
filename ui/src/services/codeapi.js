@@ -13,13 +13,10 @@ const cfgApplyDefaults = (host_base) => {
 
 const CFG= cfgApplyDefaults(); //DFLT, modified by setConfig
 
-export const setConfig = async (tokenText) => {
-	try { tokenText= atob(tokenText) }
-	catch (ex) {} //A: handled below
+export const setConfig = async (cfg_kv) => {
 	try { 
-		const token_cfg= JSON.parse(tokenText); 
 		//XXX:validate with server!
-		Object.assign(CFG, cfgApplyDefaults(), token_cfg);
+		Object.assign(CFG, cfgApplyDefaults(), cfg_kv);
 		console.log("CFG", CFG);
 	} catch (ex) {
 		throw new Error('Please check you copied all the characters','error','Invalid token');
