@@ -25,7 +25,9 @@ export const setConfig = async (cfg_kv) => {
 
 export const url_live= async (envName) => {
 	envName= envName || CFG.env_name_dflt;
-	return CFG.url_live || CFG.url_code.replace('://',`://env_${envName}.`); 
+	const r= await fetch(`${CFG.url_code}/proxy/${envName}/`, {method: 'POST', headers: {"Authorization": `Bearer ${CFG.token}`}}).then( res => res.json());
+	const url_base= (CFG.url_live || CFG.url_code.replace('://',`://env_${envName}.`)); 
+	return `${url_base}/_code_editing_connect_/${r.proxy_token}`
 }
 
 export const file_list= async (envName) => {
