@@ -14,7 +14,7 @@ const DEFAULT_CONFIG= {
 	"DOC3": "use the browser network console to see what happens",
 	"url_live": "http://live.localhost:3000",
 	"url_code": "http://localhost:3000",
-	"needs_login_at": "http://localhost:8000/auth/login?scope=editor&extra_data={{cfg}}"
+	"needs_login_at": "http://localhost:8000/auth/login?scope=editor&redirect_uri={{my_uri}}&extra_data={{cfg}}"
 }
 
 export function LoginPage({setConfig}) {
@@ -36,11 +36,11 @@ export function LoginPage({setConfig}) {
 		discoverStatus();
 	},[]);
 
-	
+	const my_uri=	location.href.replace(/[?\#].*$/,'');
 	const onCfgStrChange = (e) => {
 		const s= e.target.value;
 		setCfgStr(s);
-		setCfgURL(location.href.replace(/[?\#].*$/,'')+'?cfg='+(s.match(/[^\w]/) ? enc_b64url(s) : s))
+		setCfgURL(my_uri+'?cfg='+(s.match(/[^\w]/) ? enc_b64url(s) : s))
 	}
 
 	const onLoginBtn= () => {
@@ -52,7 +52,11 @@ export function LoginPage({setConfig}) {
 			if (typeof(d)=="object") {
 				if (d.needs_login_at) {
 					const cfg_clean= {...d}; delete cfg_clean.needs_login_at;	
-					const url= d.needs_login_at.replace('{{cfg}}',encodeURIComponent(JSON.stringify(cfg_clean)))
+					const url= (
+						d.needs_login_at
+						.replace('{{my_uri}}',encodeURIComponent(my_uri))
+						.replace('{{cfg}}',encodeURIComponent(JSON.stringify(cfg_clean)))
+					);
 					confirm(`You will be redirected to login at ${url.slice(0,100)}...`);
 					location.href= url; //A:NAVIGATE!
 				} else {
